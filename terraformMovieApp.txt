@@ -1,0 +1,122 @@
+Install terraform 
+brew tap hashicorp/tap
+brew install hashicorp/tap/terraform
+terraform version
+
+
+ ssh-keygen -t rsa -b 4096 -f moviebook-key
+
+
+# 1. Configure
+cd terraform && cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars: db_username, db_password, jwt_secret, ssh_public_key
+
+# 2. Provision
+terraform init && terraform apply
+
+# 3. Deploy backend (after EC2 exists)
+./scripts/deploy-backend.sh $(terraform -chdir=terraform output -raw artifacts_bucket)
+
+# 4. Start backend on EC2 (if not auto-started)
+ssh -i your-key.pem ec2-user@$(terraform -chdir=terraform output -raw backend_ec2_public_ip)
+sudo /opt/moviebooking/start.sh
+
+# 5. Deploy frontend
+./scripts/deploy-frontend.sh $(terraform -chdir=terraform output -raw frontend_bucket)
+
+# 6. Open app
+open https://$(terraform -chdir=terraform output -raw cloudfront_domain)
+
+AWS CLi
+access key - AKIASFUIRZY5RPYVTLG5
+secret - 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
+
+
+cd terraform
+terraform init
+terraform plan    # Review changes
+terraform apply   # Create infrastructure
+# Run deploy from project root
+./scripts/deploy-backend.sh $(terraform -chdir=terraform output -raw artifacts_bucket)
+./scripts/deploy-frontend.sh $(terraform -chdir=terraform output -raw frontend_bucket)
+
+on EC2 instance
+# Check if Java process is running
+ps aux | grep java
+# Check logs
+sudo tail -100f /var/log/moviebooking.log
+# If not running, start it
+/usr/bin/sudo /opt/moviebooking/start.sh
+sudo /opt/moviebooking/start.sh
+
+sudo sed -i "s|export DB_PASSWORD=.*|export DB_PASSWORD='NavyaJaiswal\$2025'|" /opt/moviebooking/env
+
+app_url = "https://d3jrnnnos01is8.cloudfront.net"
+artifacts_bucket = "moviebook-artifacts-hp8l1afy"
+backend_ec2_public_ip = "100.53.250.70"
+cloudfront_domain = "d3jrnnnos01is8.cloudfront.net"
+cloudfront_hosted_zone_id = "Z2FDTNDATAQYW2"
+frontend_bucket = "moviebook-frontend-hp8l1afy"
+posters_bucket = "moviebook-posters-hp8l1afy"
+rds_endpoint = "moviebook-db.cqpy2eki8enc.us-east-1.rds.amazonaws.com:3306"
+
+ssh to EC2 instance -
+ssh -i "varun-imageapp-keypair.pem" ec2-user@ec2-65-0-180-197.ap-south-1.compute.amazonaws.com
+ssh -i "moviebook-key" ec2-user@ec2-3-228-10-232.compute-1.amazonaws.com
+ssh -i "moviebook-key" ec2-user@ec2-44-203-239-179.compute-1.amazonaws.com
+
+ssh -i "moviebook-key" ec2-user@ec2-44-203-239-179.compute-1.amazonaws.com
+ssh -i "moviebook-key" ec2-user@ec2-44-213-119-234.compute-1.amazonaws.com
+
+
+Invalidate CloudFront cache
+# Get distribution ID
+terraform -chdir=terraform output
+# Invalidate cache (get distribution ID from AWS Console or: aws cloudfront list-distributions)
+aws cloudfront create-invalidation --distribution-id <DISTRIBUTION_ID> --paths "/api/*"
+
+# Install MySQL client if needed
+sudo yum install -y mariadb105
+# Connect to RDS (get endpoint from: terraform -chdir=terraform output rds_endpoint)
+mysql -h moviebook-db.xxxxx.us-east-1.rds.amazonaws.com -u adminVarun -p moviebookingdb
+
+mysql -h moviebook-db.cqpy2eki8enc.us-east-1.rds.amazonaws.com -u adminVarun -p moviebookingdb
+mysql -h moviebook-db.cqpy2eki8enc.us-east-1.rds.amazonaws.com -u adminVarun -p moviebookingdb
+
+UPDATE app_users SET role = 'ADMIN' WHERE username = 'admin';
+-- or
+UPDATE app_users SET role = 'ADMIN' WHERE email = 'admin@example.com';
+
+==========================================
+
+On EC2 verify DB connectivity before restarting:
+source /opt/moviebooking/env
+nc -zv $DB_HOST 3306
+echo "DB credentials set: $([ -n \"$DB_PASSWORD\" ] && echo 'yes' || echo 'no')"
+
+On EC2, restart the app:
+# Kill existing process
+sudo pkill -f "java -jar" || true
+
+# Download the new JAR
+cd /opt/moviebooking
+source /opt/moviebooking/env
+aws s3 cp s3://$(grep aws s3 cp /opt/moviebooking/start.sh | sed "s/.*s3:\/\/\([^\/]*\)\/.*/\1/")/movie-booking-backend.jar app.jar --region $AWS_REGION
+
+# Or simply run start.sh (it downloads fresh)
+sudo /opt/moviebooking/start.sh
+
+# Watch logs
+sudo tail -f /var/log/moviebooking.log
+ 
+===================================================
+
+Get App URL -
+cd terraform
+terraform output -raw app_url
+
+=================================================
+
+admin / Admin@1234 (ADMIN)
+john / User@1234 (USER)
+jane / User@1234 (USER)

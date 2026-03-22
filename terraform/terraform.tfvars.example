@@ -1,0 +1,27 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Copy to terraform.tfvars and fill in values.
+# Never commit terraform.tfvars (contains secrets).
+# ─────────────────────────────────────────────────────────────────────────────
+
+aws_region  = "us-east-1"
+environment = "prod"
+project_name = "moviebook"
+
+# EC2 (free tier: t2.micro)
+ec2_instance_type = "t2.micro"
+
+# RDS (free tier: db.t3.micro)
+db_instance_class = "db.t3.micro"
+db_name           = "moviebookingdb"
+db_username       = "admin"
+db_password       = "CHANGE_ME_STRONG_PASSWORD"
+
+# Secrets
+jwt_secret = "CHANGE_ME_32_CHAR_OR_LONGER_RANDOM_STRING"
+
+# CIDR allowed for SSH (use your IP for security, or 0.0.0.0/0 for anywhere)
+allowed_cidr = "0.0.0.0/0"
+
+# SSH public key (generate with: ssh-keygen -t rsa -b 4096 -f moviebook-key)
+# Paste the contents of moviebook-key.pub
+ssh_public_key = "ssh-rsa AAAAB3... your@email.com"

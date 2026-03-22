@@ -1,0 +1,59 @@
+# ────────────────────────────────────────────────────────────────────────────
+# AWS CodeBuild – root buildspec
+# Builds both the Spring Boot backend (Maven) and the React frontend (Vite).
+#
+# Environment variables expected from CodeBuild / SSM Parameter Store:
+#   REACT_APP_API_URL  – Backend API URL (e.g. http://ec2-xx.compute.amazonaws.com)
+#   S3_FRONTEND_BUCKET – S3 bucket name for the React build artefacts
+# ────────────────────────────────────────────────────────────────────────────
+version: 0.2
+
+env:
+  parameter-store:
+    REACT_APP_API_URL: "/moviebooking/prod/api-url"
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto17
+      nodejs: 20
+    commands:
+      - echo "Installing dependencies..."
+
+  pre_build:
+    commands:
+      - echo "Pre-build phase started at $(date)"
+      - cd movie-booking-frontend && npm ci --prefer-offline && cd ..
+
+  build:
+    commands:
+      - echo "Building Spring Boot backend..."
+      - cd movie-booking-backend
+      - mvn package -DskipTests -q
+      - cd ..
+
+      - echo "Building React frontend..."
+      - cd movie-booking-frontend
+      - VITE_API_BASE_URL=$REACT_APP_API_URL npm run build
+      - cd ..
+
+  post_build:
+    commands:
+      - echo "Build completed at $(date)"
+
+artifacts:
+  files:
+    # Backend JAR
+    - movie-booking-backend/target/movie-booking-backend.jar
+    # CodeDeploy hooks
+    - appspec.yml
+    - .aws/scripts/**
+    # React build output (uploaded to S3 separately via a post-deploy script)
+    - movie-booking-frontend/dist/**
+  discard-paths: no
+  base-directory: "."
+
+cache:
+  paths:
+    - "/root/.m2/**/*"
+    - "movie-booking-frontend/node_modules/**/*"
