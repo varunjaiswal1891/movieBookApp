@@ -27,10 +27,6 @@ sudo /opt/moviebooking/start.sh
 # 6. Open app
 open https://$(terraform -chdir=terraform output -raw cloudfront_domain)
 
-AWS CLi
-access key - AKIASFUIRZY5RPYVTLG5
-secret - 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
-
 
 cd terraform
 terraform init
@@ -49,7 +45,7 @@ sudo tail -100f /var/log/moviebooking.log
 /usr/bin/sudo /opt/moviebooking/start.sh
 sudo /opt/moviebooking/start.sh
 
-sudo sed -i "s|export DB_PASSWORD=.*|export DB_PASSWORD='NavyaJaiswal\$2025'|" /opt/moviebooking/env
+sudo sed -i "s|export DB_PASSWORD=.*|export DB_PASSWORD='*****'|" /opt/moviebooking/env
 
 app_url = "https://d3jrnnnos01is8.cloudfront.net"
 artifacts_bucket = "moviebook-artifacts-hp8l1afy"

@@ -1,47 +1,40 @@
 # CineBook – Movie Ticket Booking App
 
-A full-stack, production-ready movie ticket booking application built as a learning project.
+A full-stack movie ticket booking application with local development and AWS deployment via Terraform.
 
 | Layer | Technology |
-|-------|-----------|
+|-------|------------|
 | **Frontend** | React 18 + Vite + Tailwind CSS |
 | **Backend** | Java 17 + Spring Boot 3 + Spring Security (JWT) |
-| **Database** | MySQL 8 (RDS Free Tier) · H2 in-memory for local dev |
+| **Database** | H2 (local) · MySQL 8 RDS (production) |
 | **Storage** | AWS S3 (movie posters) |
-| **CI/CD** | GitHub → AWS CodePipeline → CodeBuild → CodeDeploy → EC2 |
-| **AI Feature** | In-app content-based + collaborative-filtering recommendation engine |
+| **Deployment** | Terraform (EC2, RDS, S3, CloudFront) |
+| **AI Feature** | In-app content-based + collaborative-filtering recommendations |
 
 ---
 
 ## Architecture
 
+### Local Development
 ```
-Browser (React SPA)
-       │
-       │ HTTPS
-       ▼
-  EC2 t2.micro
-  Spring Boot :8080
-       │
-       ├── MySQL RDS db.t3.micro (private subnet)
-       └── S3  (movie posters – presigned URLs)
-
-GitHub
-  └── CodePipeline
-        ├── CodeBuild  (build React + Spring Boot)
-        └── CodeDeploy (deploy JAR to EC2)
+Browser (React) :3000  ←→  Vite proxy /api  →  Spring Boot :8080  →  H2 in-memory DB
 ```
 
-### AWS Free Tier Usage
-
-| Service | Free Tier |
-|---------|-----------|
-| EC2 t2.micro | 750 hrs/month (12 months) |
-| RDS db.t3.micro MySQL | 750 hrs/month (12 months) |
-| S3 | 5 GB storage, 20 K GET, 2 K PUT |
-| CodeBuild | 100 build min/month |
-| CodePipeline | 1 active pipeline free |
-| CodeDeploy | Free for EC2 |
+### AWS Production (Terraform)
+```
+                    Browser (HTTPS)
+                           │
+                           ▼
+                  CloudFront (CDN)
+                    /         \
+              /*              /api/*
+               │                  │
+               ▼                  ▼
+        S3 (frontend)       EC2 (Spring Boot)
+        index.html, JS           │
+                                 ├── RDS MySQL (private subnet)
+                                 └── S3 Posters (presigned URLs)
+```
 
 ---
 
@@ -49,37 +42,52 @@ GitHub
 
 ```
 movieBookApp/
-├── movie-booking-backend/        ← Spring Boot Maven project
+├── movie-booking-backend/        # Spring Boot Maven project
 │   ├── src/main/java/com/moviebooking/
-│   │   ├── entity/               User, Movie, Show, Seat, Booking
-│   │   ├── repository/           JPA repositories
-│   │   ├── service/              AuthService, MovieService, ShowService,
-│   │   │                         BookingService, AIRecommendationService
-│   │   ├── controller/           REST controllers (Auth, Movie, Show, Booking, Admin, AI)
-│   │   ├── security/             JWT filter, JwtUtils, UserDetailsService
-│   │   └── config/               SecurityConfig, AwsConfig, GlobalExceptionHandler
+│   │   ├── entity/               # User, Movie, Show, Seat, Booking
+│   │   ├── repository/           # JPA repositories
+│   │   ├── service/              # AuthService, MovieService, ShowService, etc.
+│   │   ├── controller/           # REST controllers (Auth, Movie, Show, Booking, Admin, AI)
+│   │   ├── security/             # JWT filter, JwtUtils, UserDetailsService
+│   │   └── config/               # SecurityConfig, AwsConfig, CorsProperties
 │   ├── src/main/resources/
-│   │   ├── application.yml       Local / H2
-│   │   └── application-prod.yml  Production / MySQL (uses env vars)
+│   │   ├── application.yml       # Local / H2
+│   │   ├── application-prod.yml  # Production / MySQL (env vars)
+│   │   ├── schema.sql             # H2 schema
+│   │   └── schema-mysql.sql      # MySQL schema
 │   ├── Dockerfile
 │   └── pom.xml
 │
-├── movie-booking-frontend/       ← React + Vite + Tailwind project
+├── movie-booking-frontend/       # React + Vite + Tailwind
 │   ├── src/
-│   │   ├── api/index.js          Axios client + all API calls
-│   │   ├── context/AuthContext   JWT stored in localStorage
-│   │   ├── components/           Navbar, MovieCard, SeatGrid, AIRecommendations
-│   │   └── pages/                Home, Login, Signup, MovieDetail,
-│   │                              SeatSelection, BookingHistory, AdminDashboard
+│   │   ├── api/index.js          # Axios client + API calls
+│   │   ├── context/AuthContext.jsx
+│   │   ├── components/           # Navbar, MovieCard, SeatGrid, AIRecommendations
+│   │   └── pages/                # Home, Login, Signup, MovieDetail, SeatSelection, etc.
 │   ├── vite.config.js
 │   └── package.json
 │
-├── buildspec.yml                 CodeBuild – builds both projects
-├── appspec.yml                   CodeDeploy – deploys Spring Boot to EC2
-├── .aws/
-│   ├── scripts/                  stop/start/validate shell scripts
-│   └── cloudformation/
-│       └── infrastructure.yml   Full IaC: VPC, EC2, RDS, S3, Pipeline
+├── terraform/                    # AWS infrastructure (IaC)
+│   ├── provider.tf
+│   ├── variables.tf
+│   ├── vpc.tf
+│   ├── rds.tf
+│   ├── ec2.tf
+│   ├── s3.tf
+│   ├── cloudfront.tf
+│   ├── security-groups.tf
+│   ├── iam.tf
+│   ├── outputs.tf
+│   └── userdata-backend.sh
+│
+├── scripts/
+│   ├── deploy-backend.sh        # Build & upload JAR to S3
+│   └── deploy-frontend.sh       # Build & upload React to S3
+│
+├── LOCAL_SETUP.md               # Run locally (no AWS)
+├── TERRAFORM_DEPLOY.md          # AWS deployment guide
+├── AWS_ARCHITECTURE_FLOW.md     # CloudFront, S3, RDS flow
+├── AWS_COST_AND_DESTROY.md     # Cost, free tier, destroy
 └── README.md
 ```
 
@@ -88,46 +96,55 @@ movieBookApp/
 ## Core Features
 
 ### User
-- Signup / Login (JWT-based, BCrypt passwords)
+- Signup / Login (JWT, BCrypt passwords)
 - Browse movies with search & genre filter
 - View movie details and available shows
 - Interactive seat grid – pick 1–5 seats per booking
-- Booking history with cancellation support
-- **AI Recommendations** – personalised picks based on booking history + genre affinity + popularity
+- Booking history with cancellation
+- **AI Recommendations** – personalised picks based on booking history
 
 ### Admin
-- Add / update / delete movies (with S3 poster upload)
+- Add / update / delete movies (S3 poster upload)
 - Add / delete shows (seats auto-generated)
 
 ---
 
-## Local Development
+## Quick Start – Local Development
 
-### Prerequisites
-
-- Java 17+
-- Node.js 20+
-- Maven 3.9+
-
-### Backend
+See **[LOCAL_SETUP.md](LOCAL_SETUP.md)** for full details.
 
 ```bash
-cd movie-booking-backend
-./mvnw spring-boot:run
-# App starts on http://localhost:8080
-# H2 console: http://localhost:8080/h2-console
-# Seed data: admin/Admin@1234 · john/User@1234
+# Backend
+cd movie-booking-backend && mvn spring-boot:run
+# → http://localhost:8080 | H2 console: /h2-console
+
+# Frontend (new terminal)
+cd movie-booking-frontend && npm install && npm run dev
+# → http://localhost:3000
 ```
 
-### Frontend
+**Seed users:** `admin` / `Admin@1234` · `john` / `User@1234` · `jane` / `User@1234`
+
+---
+
+## AWS Deployment (Terraform)
+
+See **[TERRAFORM_DEPLOY.md](TERRAFORM_DEPLOY.md)** for step-by-step instructions.
 
 ```bash
-cd movie-booking-frontend
-cp .env.example .env      # VITE_API_BASE_URL=/api (proxied by Vite to :8080)
-npm install
-npm run dev
-# App starts on http://localhost:3000
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+# Edit: db_username, db_password, jwt_secret, ssh_public_key
+
+terraform init
+terraform apply
+
+# Deploy app
+./scripts/deploy-backend.sh $(terraform output -raw artifacts_bucket)
+./scripts/deploy-frontend.sh $(terraform output -raw frontend_bucket)
 ```
+
+**App URL:** `terraform output -raw app_url`
 
 ---
 
@@ -146,6 +163,7 @@ npm run dev
 | GET | `/api/movies/genres` | Public | All genres |
 | GET | `/api/movies/{id}` | Public | Movie detail |
 | GET | `/api/movies/{id}/shows` | Public | Upcoming shows |
+| GET | `/api/movies/{id}/poster-url` | Public | Presigned S3 poster URL |
 
 ### Shows & Seats
 | Method | Endpoint | Auth | Description |
@@ -165,108 +183,41 @@ npm run dev
 |--------|----------|------|-------------|
 | GET | `/api/ai/recommendations` | User | Personalised movie picks |
 
-### Admin (requires ROLE_ADMIN)
+### Admin (ROLE_ADMIN)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/admin/movies` | Create movie + poster |
 | PUT | `/api/admin/movies/{id}` | Update movie |
 | DELETE | `/api/admin/movies/{id}` | Soft-delete movie |
-| POST | `/api/admin/shows` | Create show (auto-generates seats) |
+| POST | `/api/admin/shows` | Create show |
 | DELETE | `/api/admin/shows/{id}` | Soft-delete show |
 
 ---
 
 ## AI Recommendation Engine
 
-The recommendation engine runs entirely in the JVM (**no external API calls, 100% free tier**).
+Runs entirely in the JVM – **no external APIs, free tier friendly**.
 
-**Strategy (scored composite):**
-
-1. **Genre affinity** – Weight movies in genres you have booked most
-2. **Popularity boost** – Surface the most-booked movies across all users
-3. **Rating boost** – Favour higher-rated titles within matched genres
-4. **Exclusions** – Already-watched movies are excluded
-
-Each recommendation comes with a human-readable `reason` field (e.g. "Because you enjoy Sci-Fi movies").
+**Strategy:** Genre affinity + popularity + rating boost. Excludes already-watched movies. Each recommendation includes a `reason` (e.g. "Because you enjoy Sci-Fi movies").
 
 ---
 
-## AWS Deployment Guide
+## Documentation
 
-### 1. Deploy CloudFormation stack
-
-```bash
-aws cloudformation deploy \
-  --template-file .aws/cloudformation/infrastructure.yml \
-  --stack-name moviebooking-stack \
-  --capabilities CAPABILITY_NAMED_IAM \
-  --parameter-overrides \
-      GitHubOwner=<your-github-username> \
-      GitHubRepo=movieBookApp \
-      GitHubBranch=main \
-      GitHubConnectionArn=<codestar-connection-arn> \
-      DBPassword=<strong-password> \
-      KeyPairName=<your-ec2-keypair>
-```
-
-### 2. Store secrets in SSM Parameter Store
-
-```bash
-aws ssm put-parameter --name /moviebooking/prod/db-host     --value "<rds-endpoint>" --type SecureString
-aws ssm put-parameter --name /moviebooking/prod/db-port     --value "3306"            --type String
-aws ssm put-parameter --name /moviebooking/prod/db-name     --value "moviebookingdb"  --type String
-aws ssm put-parameter --name /moviebooking/prod/db-user     --value "admin"           --type SecureString
-aws ssm put-parameter --name /moviebooking/prod/db-password --value "<db-password>"   --type SecureString
-aws ssm put-parameter --name /moviebooking/prod/jwt-secret  --value "<32-char-secret>" --type SecureString
-aws ssm put-parameter --name /moviebooking/prod/s3-bucket   --value "<bucket-name>"   --type String
-aws ssm put-parameter --name /moviebooking/prod/aws-region  --value "us-east-1"       --type String
-aws ssm put-parameter --name /moviebooking/prod/api-url     --value "http://<ec2-dns>:8080" --type String
-```
-
-### 3. Initialise the RDS schema
-
-```bash
-# Run from EC2 or bastion after Flyway/Liquibase migrations, or let JPA
-# create the schema on first boot (spring.jpa.hibernate.ddl-auto=update)
-```
-
-### 4. Push code – pipeline triggers automatically
-
-```bash
-git push origin main
-# CodePipeline: Source → Build → Deploy
-```
-
-### 5. Deploy the React frontend to S3
-
-```bash
-cd movie-booking-frontend
-VITE_API_BASE_URL=http://<ec2-dns>:8080/api npm run build
-aws s3 sync dist/ s3://moviebooking-frontend-<account-id> --delete
-```
+| Document | Description |
+|----------|-------------|
+| [LOCAL_SETUP.md](LOCAL_SETUP.md) | Run backend + frontend locally |
+| [TERRAFORM_DEPLOY.md](TERRAFORM_DEPLOY.md) | Deploy to AWS with Terraform |
+| [AWS_ARCHITECTURE_FLOW.md](AWS_ARCHITECTURE_FLOW.md) | CloudFront, S3, RDS flow |
+| [AWS_COST_AND_DESTROY.md](AWS_COST_AND_DESTROY.md) | Cost, free tier, billing alerts, destroy |
 
 ---
 
 ## Security Highlights
 
-- Passwords hashed with **BCrypt** (strength 12)
-- **JWT** tokens (24 h expiry, HMAC-SHA256)
-- All secrets injected via **SSM Parameter Store** – never in source code
-- CORS restricted to known origins
-- Input validation via Jakarta Bean Validation on every API
-- RDS in **private subnet** – not publicly accessible
-- S3 poster bucket **blocks all public access** (served via presigned URLs)
-- EC2 Security Group denies SSH from the internet; use **AWS Systems Manager Session Manager** instead in production
-
----
-
-## Extending the App
-
-| Feature | How |
-|---------|-----|
-| Email confirmations | Add Spring Mail + AWS SES |
-| Payment simulation | Add a `/api/payments` mock endpoint |
-| Real-time seat updates | Add Spring WebSocket + STOMP |
-| Upgrade AI | Swap `AIRecommendationService` with AWS Bedrock (Titan / Claude) |
-| HTTPS | Put an AWS ALB + ACM certificate in front of EC2 |
-| CDN for frontend | Move S3 behind CloudFront |
+- BCrypt passwords (strength 12)
+- JWT (24 h expiry, HMAC-SHA256)
+- Secrets via env vars (prod) – never in source
+- CORS restricted to CloudFront / localhost
+- RDS in private subnet
+- S3 posters bucket private (presigned URLs only)
