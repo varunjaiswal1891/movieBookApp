@@ -1,0 +1,48 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# AWS CodeBuild – Build backend JAR + frontend, deploy frontend to S3, output for CodeDeploy
+# Environment variables from Terraform: ARTIFACTS_BUCKET, FRONTEND_BUCKET, CLOUDFRONT_DIST_ID
+# ─────────────────────────────────────────────────────────────────────────────
+
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto17
+      nodejs: 20
+    commands:
+      - echo "Installing dependencies..."
+
+  pre_build:
+    commands:
+      - echo "Pre-build started at $(date)"
+      - cd movie-booking-frontend && npm ci && cd ..
+
+  build:
+    commands:
+      - echo "Building Spring Boot backend..."
+      - cd movie-booking-backend && mvn package -DskipTests -q && cd ..
+
+      - echo "Building React frontend..."
+      - cd movie-booking-frontend && VITE_API_BASE_URL="${VITE_API_BASE_URL:-/api}" npm run build && cd ..
+
+      - echo "Preparing CodeDeploy revision..."
+      - mkdir -p deploy/scripts
+      - cp movie-booking-backend/target/movie-booking-backend.jar deploy/app.jar
+      - cp appspec.yml deploy/
+      - cp scripts/codedeploy/*.sh deploy/scripts/
+      - chmod +x deploy/scripts/*.sh
+
+  post_build:
+    commands:
+      - echo "Deploying frontend to S3..."
+      - aws s3 sync movie-booking-frontend/dist/ "s3://$FRONTEND_BUCKET/" --delete
+
+      - echo "Invalidating CloudFront cache..."
+      - aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DIST_ID" --paths "/*" || true
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: deploy
+  name: BuildArtifact

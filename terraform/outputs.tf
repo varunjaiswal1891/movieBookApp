@@ -41,3 +41,14 @@ output "rds_endpoint" {
   description = "RDS MySQL endpoint"
   value       = aws_db_instance.main.endpoint
 }
+
+# CI/CD (when enable_cicd = true)
+output "pipeline_url" {
+  description = "CodePipeline console URL"
+  value       = var.enable_cicd ? "https://${var.aws_region}.console.aws.amazon.com/codesuite/codepipeline/pipelines/${aws_codepipeline.main[0].name}/view" : null
+}
+
+output "pipeline_name" {
+  description = "CodePipeline name"
+  value       = var.enable_cicd ? aws_codepipeline.main[0].name : null
+}

@@ -1,0 +1,22 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# AWS CodeDeploy – AppSpec for backend deployment to EC2
+# Revision contains: app.jar, scripts/stop.sh, scripts/start.sh
+# Env file (/opt/moviebooking/env) is created by EC2 userdata – do not overwrite
+# ─────────────────────────────────────────────────────────────────────────────
+
+version: 0.0
+os: linux
+
+files:
+  - source: app.jar
+    destination: /opt/moviebooking
+
+hooks:
+  ApplicationStop:
+    - location: scripts/stop.sh
+      timeout: 30
+      runas: root
+  ApplicationStart:
+    - location: scripts/start.sh
+      timeout: 60
+      runas: root

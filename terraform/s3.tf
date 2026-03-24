@@ -72,3 +72,26 @@ resource "aws_s3_bucket_public_access_block" "posters" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+# Pipeline artifact store (CodePipeline)
+resource "aws_s3_bucket" "pipeline" {
+  count = var.enable_cicd ? 1 : 0
+
+  bucket        = "${var.project_name}-pipeline-${random_string.bucket_suffix.result}"
+  force_destroy = true
+
+  tags = {
+    Name = "${var.project_name}-pipeline"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "pipeline" {
+  count = var.enable_cicd ? 1 : 0
+
+  bucket = aws_s3_bucket.pipeline[0].id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}

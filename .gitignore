@@ -11,3 +11,7 @@ target/
 *.iml
 *.class
 terraform/terraform.tfvars
+
+# AWS / credential exports – never commit
+*accessKeys*.csv
+*credentials*.csv

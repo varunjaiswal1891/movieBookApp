@@ -25,3 +25,8 @@ allowed_cidr = "0.0.0.0/0"
 # SSH public key (generate with: ssh-keygen -t rsa -b 4096 -f moviebook-key)
 # Paste the contents of moviebook-key.pub
 ssh_public_key = "ssh-rsa AAAAB3... your@email.com"
+
+# CI/CD – CodePipeline source (GitHub)
+github_repo   = "varunjaiswal1891/movieBookApp"
+github_branch = "main"
+enable_cicd   = true

@@ -84,3 +84,23 @@ variable "ssh_public_key" {
   description = "SSH public key for EC2 access"
   type        = string
 }
+
+# ── CI/CD ────────────────────────────────────────────────────────────────────
+
+variable "github_repo" {
+  description = "GitHub repository (owner/repo or full URL for CodePipeline source)"
+  type        = string
+  default     = "varunjaiswal1891/movieBookApp"
+}
+
+variable "github_branch" {
+  description = "Branch to deploy"
+  type        = string
+  default     = "master"
+}
+
+variable "enable_cicd" {
+  description = "Enable CodeBuild, CodeDeploy, CodePipeline"
+  type        = bool
+  default     = true
+}

@@ -44,6 +44,14 @@ resource "aws_iam_role_policy" "backend_s3" {
   })
 }
 
+# CodeDeploy agent – allow EC2 to receive deployments from pipeline
+resource "aws_iam_role_policy_attachment" "backend_codedeploy" {
+  count = var.enable_cicd ? 1 : 0
+
+  role       = aws_iam_role.backend.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy"
+}
+
 resource "aws_iam_instance_profile" "backend" {
   name = "${var.project_name}-backend-profile"
   role = aws_iam_role.backend.name

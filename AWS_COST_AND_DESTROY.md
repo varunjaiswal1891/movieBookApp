@@ -8,6 +8,9 @@
 | RDS MySQL | db.t3.micro | 750 hrs/month | 24/7 = ~720 hrs |
 | S3 | 3 buckets | 5 GB total | Frontend + posters + artifacts |
 | CloudFront | 1 distribution | 50 GB transfer / 2M requests | First 12 months |
+| CodeBuild | 1 project | 100 build min/month | Free tier |
+| CodePipeline | 1 pipeline | Free | First 12 months |
+| CodeDeploy | EC2 deployments | Free | Always free for EC2 |
 | VPC, EBS | — | Included with EC2 | — |
 | Data transfer | — | 15 GB out (free tier) | After that: ~$0.09/GB |
 

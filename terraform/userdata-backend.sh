@@ -3,6 +3,14 @@ set -e
 yum update -y
 yum install -y java-17-amazon-corretto-headless nc
 
+# CodeDeploy agent (for CI/CD pipeline) – AL2023 uses install script
+yum install -y ruby wget
+cd /tmp
+wget -q "https://aws-codedeploy-${aws_region}.s3.${aws_region}.amazonaws.com/latest/install" -O install
+chmod +x install
+./install auto
+rm -f install
+
 # Amazon Linux 2023: AWS CLI v2 is pre-installed
 mkdir -p /opt/moviebooking
 cd /opt/moviebooking
