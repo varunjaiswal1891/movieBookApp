@@ -76,10 +76,7 @@ movieBookApp/
 │
 ├── buildspec.yml                 # CodeBuild – build backend + frontend
 ├── appspec.yml                   # CodeDeploy – backend deployment
-├── scripts/
-│   ├── deploy-backend.sh        # Manual: build & upload JAR
-│   ├── deploy-frontend.sh       # Manual: build & upload React
-│   └── codedeploy/              # CodeDeploy hooks (stop, start)
+├── scripts/codedeploy/           # CodeDeploy hooks (stop, start) – used by buildspec
 │
 ├── LOCAL_SETUP.md               # Run locally (no AWS)
 ├── TERRAFORM_DEPLOY.md          # AWS deployment guide

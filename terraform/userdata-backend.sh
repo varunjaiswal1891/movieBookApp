@@ -35,7 +35,7 @@ cat > /opt/moviebooking/start.sh << 'STARTSCRIPT'
 set -e
 cd /opt/moviebooking && source /opt/moviebooking/env
 aws s3 cp s3://BUCKET_PLACEHOLDER/JAR_PLACEHOLDER app.jar --region $AWS_REGION || {
-  echo "JAR not found. Run: ./scripts/deploy-backend.sh <artifacts-bucket>"
+  echo "JAR not found. Run CodePipeline or: aws s3 cp target/movie-booking-backend.jar s3://BUCKET_PLACEHOLDER/JAR_PLACEHOLDER"
   exit 1
 }
 nohup java -jar -Dspring.profiles.active=prod app.jar > /var/log/moviebooking.log 2>&1 &
@@ -54,5 +54,5 @@ for i in $(seq 1 60); do
   echo "Attempt $i: RDS not ready, retrying in 10s..."; sleep 10
 done
 
-# Try to start (JAR may not be uploaded yet – run start.sh manually after deploy-backend)
+# Try to start (JAR may not be uploaded yet – run pipeline or upload JAR to S3, then start.sh)
 /opt/moviebooking/start.sh || echo "Upload JAR, then: sudo /opt/moviebooking/start.sh"

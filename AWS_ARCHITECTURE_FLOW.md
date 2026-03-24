@@ -79,7 +79,7 @@ CloudFront is the single public URL for the app. It decides whether each request
 
 | Flow step | What happens |
 |-----------|--------------|
-| Deploy    | `deploy-frontend.sh` runs `npm run build` and `aws s3 sync dist/ s3://frontend-bucket/` |
+| Deploy    | CodeBuild runs `npm run build` and `aws s3 sync dist/` to the frontend bucket (or manual equivalent) |
 | Request   | User asks for `GET /` or `GET /assets/main.js` |
 | CloudFront| Sends request to S3 origin |
 | S3        | Returns the file |
@@ -102,7 +102,7 @@ assets/
 
 | Flow step | What happens |
 |-----------|--------------|
-| Deploy    | `deploy-backend.sh` runs `mvn package` and `aws s3 cp .../movie-booking-backend.jar s3://artifacts-bucket/` |
+| Deploy    | CodeBuild runs `mvn package`, uploads JAR to artifacts bucket, CodeDeploy copies `app.jar` to EC2 |
 | EC2 boot  | User data runs `aws s3 cp s3://artifacts-bucket/... app.jar` |
 | EC2 start | `start.sh` downloads JAR and runs `java -jar app.jar` |
 

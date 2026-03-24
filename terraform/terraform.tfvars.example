@@ -30,3 +30,6 @@ ssh_public_key = "ssh-rsa AAAAB3... your@email.com"
 github_repo   = "varunjaiswal1891/movieBookApp"
 github_branch = "main"
 enable_cicd   = true
+
+# Optional: your IAM user ARN for manual aws s3 cp to the artifacts bucket from your laptop
+# artifacts_upload_iam_arns = ["arn:aws:iam::YOUR_ACCOUNT_ID:user/YOUR_USER"]

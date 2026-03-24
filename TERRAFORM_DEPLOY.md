@@ -27,6 +27,8 @@ cd terraform
 cp terraform.tfvars.example terraform.tfvars
 ```
 
+**Storing secrets in AWS (no Git commits):** step-by-step guide for **Secrets Manager** (full `terraform.tfvars` as one secret) → **[terraform/SECRETS_MANAGER_TFVARS_STEPS.md](terraform/SECRETS_MANAGER_TFVARS_STEPS.md)**. Helper: `./scripts/fetch-tfvars-from-aws.sh`.
+
 Edit `terraform.tfvars` and set:
 
 - `db_username`, `db_password` – RDS MySQL credentials
@@ -69,14 +71,17 @@ terraform -chdir=terraform output pipeline_url
 
 ## Manual Deploy (Fallback)
 
-If the pipeline fails or you prefer manual deploy:
+If the pipeline fails, build locally and upload with AWS CLI (get bucket names from `terraform output`):
 
 ```bash
-# Backend (get bucket: terraform -chdir=terraform output artifacts_bucket)
-./scripts/deploy-backend.sh <artifacts-bucket>
+ART=$(terraform -chdir=terraform output -raw artifacts_bucket)
+FE=$(terraform -chdir=terraform output -raw frontend_bucket)
 
-# Frontend (get bucket: terraform -chdir=terraform output frontend_bucket)
-./scripts/deploy-frontend.sh <frontend-bucket>
+cd movie-booking-backend && mvn package -DskipTests -q
+aws s3 cp target/movie-booking-backend.jar "s3://$ART/movie-booking-backend.jar"
+
+cd ../movie-booking-frontend && npm ci && VITE_API_BASE_URL=/api npm run build
+aws s3 sync dist/ "s3://$FE/" --delete
 
 # On EC2 – restart backend: sudo /opt/moviebooking/start.sh
 ```
