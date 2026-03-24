@@ -35,6 +35,10 @@ phases:
 
   post_build:
     commands:
+      # Artifacts bucket: same path EC2 userdata/start.sh uses (optional manual pull)
+      - echo "Publishing backend JAR to artifacts bucket..."
+      - aws s3 cp movie-booking-backend/target/movie-booking-backend.jar "s3://$ARTIFACTS_BUCKET/movie-booking-backend.jar"
+
       - echo "Deploying frontend to S3..."
       - aws s3 sync movie-booking-frontend/dist/ "s3://$FRONTEND_BUCKET/" --delete
 

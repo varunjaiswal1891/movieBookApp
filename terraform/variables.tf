@@ -104,3 +104,10 @@ variable "enable_cicd" {
   type        = bool
   default     = true
 }
+
+# Optional: IAM user/role ARNs allowed to upload JAR via CLI (aws s3 cp). EC2 role already has GetObject.
+variable "artifacts_upload_iam_arns" {
+  description = "IAM principal ARNs that may PutObject to the artifacts bucket (e.g. your IAM user for deploy-backend.sh)"
+  type        = list(string)
+  default     = []
+}
