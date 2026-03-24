@@ -34,10 +34,28 @@ resource "aws_iam_role_policy" "codebuild" {
         ]
         Resource = "*"
       },
+      # aws s3 sync requires ListBucket on the bucket (not only object ACLs)
+      {
+        Effect = "Allow"
+        Action = ["s3:ListBucket"]
+        Resource = [
+          aws_s3_bucket.frontend.arn,
+          aws_s3_bucket.pipeline[0].arn,
+          aws_s3_bucket.artifacts.arn
+        ]
+      },
       {
         Effect = "Allow"
         Action = ["s3:GetObject", "s3:GetObjectVersion"]
         Resource = "${aws_s3_bucket.artifacts.arn}/*"
+      },
+      # CodePipeline stores source + passes build artifacts via this bucket
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject", "s3:GetObjectVersion", "s3:PutObject", "s3:DeleteObject"
+        ]
+        Resource = "${aws_s3_bucket.pipeline[0].arn}/*"
       },
       {
         Effect = "Allow"

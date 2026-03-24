@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CodeStarConnectionsAndCodeConnections",
+      "Effect": "Allow",
+      "Action": [
+        "codeconnections:CreateConnection",
+        "codeconnections:DeleteConnection",
+        "codeconnections:GetConnection",
+        "codeconnections:ListConnections",
+        "codeconnections:ListTagsForResource",
+        "codeconnections:TagResource",
+        "codeconnections:UntagResource",
+        "codeconnections:UseConnection",
+        "codeconnections:PassConnection",
+        "codestar-connections:CreateConnection",
+        "codestar-connections:DeleteConnection",
+        "codestar-connections:GetConnection",
+        "codestar-connections:ListConnections",
+        "codestar-connections:ListTagsForResource",
+        "codestar-connections:TagResource",
+        "codestar-connections:UntagResource",
+        "codestar-connections:UseConnection",
+        "codestar-connections:PassConnection"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

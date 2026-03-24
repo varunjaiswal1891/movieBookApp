@@ -8,7 +8,7 @@ A full-stack movie ticket booking application with local development and AWS dep
 | **Backend** | Java 17 + Spring Boot 3 + Spring Security (JWT) |
 | **Database** | H2 (local) · MySQL 8 RDS (production) |
 | **Storage** | AWS S3 (movie posters) |
-| **Deployment** | Terraform (EC2, RDS, S3, CloudFront) |
+| **Deployment** | Terraform + CodePipeline (CodeBuild, CodeDeploy) |
 | **AI Feature** | In-app content-based + collaborative-filtering recommendations |
 
 ---
@@ -68,21 +68,18 @@ movieBookApp/
 │   └── package.json
 │
 ├── terraform/                    # AWS infrastructure (IaC)
-│   ├── provider.tf
-│   ├── variables.tf
-│   ├── vpc.tf
-│   ├── rds.tf
-│   ├── ec2.tf
-│   ├── s3.tf
-│   ├── cloudfront.tf
-│   ├── security-groups.tf
-│   ├── iam.tf
-│   ├── outputs.tf
-│   └── userdata-backend.sh
+│   ├── provider.tf, variables.tf, vpc.tf, rds.tf, ec2.tf, s3.tf
+│   ├── cloudfront.tf, security-groups.tf, iam.tf, iam-cicd.tf
+│   ├── codestar.tf, codebuild.tf, codedeploy.tf, codepipeline.tf
+│   ├── outputs.tf, userdata-backend.sh
+│   └── terraform.tfvars.example
 │
+├── buildspec.yml                 # CodeBuild – build backend + frontend
+├── appspec.yml                   # CodeDeploy – backend deployment
 ├── scripts/
-│   ├── deploy-backend.sh        # Build & upload JAR to S3
-│   └── deploy-frontend.sh       # Build & upload React to S3
+│   ├── deploy-backend.sh        # Manual: build & upload JAR
+│   ├── deploy-frontend.sh       # Manual: build & upload React
+│   └── codedeploy/              # CodeDeploy hooks (stop, start)
 │
 ├── LOCAL_SETUP.md               # Run locally (no AWS)
 ├── TERRAFORM_DEPLOY.md          # AWS deployment guide
@@ -127,7 +124,7 @@ cd movie-booking-frontend && npm install && npm run dev
 
 ---
 
-## AWS Deployment (Terraform)
+## AWS Deployment (Terraform + CI/CD)
 
 See **[TERRAFORM_DEPLOY.md](TERRAFORM_DEPLOY.md)** for step-by-step instructions.
 
@@ -139,12 +136,12 @@ cp terraform.tfvars.example terraform.tfvars
 terraform init
 terraform apply
 
-# Deploy app
-./scripts/deploy-backend.sh $(terraform output -raw artifacts_bucket)
-./scripts/deploy-frontend.sh $(terraform output -raw frontend_bucket)
+# Authorize GitHub in AWS Console → Connections (once)
+# Push to main → pipeline builds and deploys automatically
 ```
 
-**App URL:** `terraform output -raw app_url`
+**App URL:** `terraform output -raw app_url`  
+**Pipeline:** `terraform output pipeline_url`
 
 ---
 
