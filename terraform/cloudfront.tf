@@ -31,10 +31,13 @@ resource "aws_cloudfront_distribution" "main" {
     origin_id   = "EC2-backend"
 
     custom_origin_config {
-      http_port              = 8080
-      https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
+      http_port                = 8080
+      https_port               = 443
+      origin_protocol_policy   = "http-only"
+      origin_ssl_protocols     = ["TLSv1.2"]
+      # Default 30s often causes 504 on first API calls while RDS/Hikari connects (max allowed is 60)
+      origin_read_timeout      = 60
+      origin_keepalive_timeout = 5
     }
   }
 
