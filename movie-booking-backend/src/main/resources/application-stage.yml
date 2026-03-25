@@ -1,6 +1,6 @@
 # ──────────────────────────────────────────────
-# Profile: prod — MySQL on AWS (production)
-# Secrets via env: DB_*, JWT_SECRET, S3_BUCKET (see userdata / CodeDeploy)
+# Profile: stage — MySQL on AWS (pre-prod / staging)
+# Same env vars as prod; tune logging/SQL for debugging
 # ──────────────────────────────────────────────
 spring:
   sql:
@@ -20,7 +20,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: false
+    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -49,12 +49,13 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,info
   endpoint:
     health:
-      show-details: never
+      show-details: when-authorized
 
 logging:
   level:
-    com.moviebooking: INFO
+    com.moviebooking: DEBUG
     org.springframework.security: WARN
+    org.hibernate.SQL: DEBUG

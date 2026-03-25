@@ -1,9 +1,14 @@
 # ──────────────────────────────────────────────
-# Local / Dev profile (default) – uses H2 in-memory DB
+# Local / no profile: H2 in-memory
+# AWS: set SPRING_PROFILES_ACTIVE=stage or prod (MySQL in application-{profile}.yml)
 # ──────────────────────────────────────────────
 spring:
-  profiles:
-    active: dev
+  application:
+    name: movie-booking-backend
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
 
   datasource:
     url: jdbc:h2:mem:moviebookingdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
@@ -28,15 +33,9 @@ spring:
     init:
       mode: embedded
 
-  servlet:
-    multipart:
-      max-file-size: 5MB
-      max-request-size: 5MB
-
 server:
   port: 8080
 
-# JWT – IMPORTANT: rotate this secret via env var in production
 app:
   cors:
     allowed-origin-patterns:
@@ -46,9 +45,9 @@ app:
       - "https://*.amazonaws.com"
   jwt:
     secret: ${JWT_SECRET:dev-only-32-char-secret-key-change-me}
-    expiration-ms: 86400000   # 24 hours
+    expiration-ms: 86400000
   aws:
-    enabled: false           # Set true in prod when S3 is configured
+    enabled: false
     region: ${AWS_REGION:us-east-1}
     s3-bucket: ${S3_BUCKET:movie-booking-posters}
 

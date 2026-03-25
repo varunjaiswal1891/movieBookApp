@@ -14,15 +14,15 @@ cd terraform && cp terraform.tfvars.example terraform.tfvars
 # 2. Provision
 terraform init && terraform apply
 
-# 3. Deploy backend (after EC2 exists)
-./scripts/deploy-backend.sh $(terraform -chdir=terraform output -raw artifacts_bucket)
+# 3. App deploy – use CodePipeline (push to GitHub) or manual AWS CLI:
+# ART=$(terraform -chdir=terraform output -raw artifacts_bucket)
+# FE=$(terraform -chdir=terraform output -raw frontend_bucket)
+# cd movie-booking-backend && mvn package -DskipTests -q && aws s3 cp target/movie-booking-backend.jar "s3://$ART/movie-booking-backend.jar"
+# cd ../movie-booking-frontend && npm ci && VITE_API_BASE_URL=/api npm run build && aws s3 sync dist/ "s3://$FE/" --delete
 
 # 4. Start backend on EC2 (if not auto-started)
 ssh -i your-key.pem ec2-user@$(terraform -chdir=terraform output -raw backend_ec2_public_ip)
 sudo /opt/moviebooking/start.sh
-
-# 5. Deploy frontend
-./scripts/deploy-frontend.sh $(terraform -chdir=terraform output -raw frontend_bucket)
 
 # 6. Open app
 open https://$(terraform -chdir=terraform output -raw cloudfront_domain)
@@ -32,9 +32,7 @@ cd terraform
 terraform init
 terraform plan    # Review changes
 terraform apply   # Create infrastructure
-# Run deploy from project root
-./scripts/deploy-backend.sh $(terraform -chdir=terraform output -raw artifacts_bucket)
-./scripts/deploy-frontend.sh $(terraform -chdir=terraform output -raw frontend_bucket)
+# Deploy app: CodePipeline (preferred) or manual aws s3 cp / sync (see README.md)
 
 on EC2 instance
 # Check if Java process is running
@@ -45,7 +43,16 @@ sudo tail -100f /var/log/moviebooking.log
 /usr/bin/sudo /opt/moviebooking/start.sh
 sudo /opt/moviebooking/start.sh
 
-sudo sed -i "s|export DB_PASSWORD=.*|export DB_PASSWORD='*****'|" /opt/moviebooking/env
+# DB password with $ — NEVER use unescaped $ inside double quotes (shell eats $2025).
+# Option A — escape $ for the shell:
+sudo sed -i "s|^export DB_PASSWORD=.*|export DB_PASSWORD='NavyaJaiswal\$2025'|" /opt/moviebooking/env
+# Option B — single-quoted sed (no shell expansion of $):
+# sudo sed -i 's|^export DB_PASSWORD=.*|export DB_PASSWORD='"'"'NavyaJaiswal$2025'"'"'|' /opt/moviebooking/env
+# Verify then restart app:
+#sudo grep DB_PASSWORD /opt/moviebooking/env
+# sudo grep DB_PASSWORD /opt/moviebooking/env
+# source /opt/moviebooking/env && mysql -h "$DB_HOST" -P "${DB_PORT:-3306}" -u "$DB_USER" -p"$DB_PASSWORD" -e "SELECT 1"
+# sudo /opt/moviebooking/start.sh
 
 app_url = "https://d3jrnnnos01is8.cloudfront.net"
 artifacts_bucket = "moviebook-artifacts-hp8l1afy"
@@ -61,8 +68,7 @@ ssh -i "varun-imageapp-keypair.pem" ec2-user@ec2-65-0-180-197.ap-south-1.compute
 ssh -i "moviebook-key" ec2-user@ec2-3-228-10-232.compute-1.amazonaws.com
 ssh -i "moviebook-key" ec2-user@ec2-44-203-239-179.compute-1.amazonaws.com
 
-ssh -i "moviebook-key" ec2-user@ec2-44-203-239-179.compute-1.amazonaws.com
-ssh -i "moviebook-key" ec2-user@ec2-44-213-119-234.compute-1.amazonaws.com
+ssh -i "moviebook-key" ec2-user@ec2-98-92-215-142.compute-1.amazonaws.com
 
 
 Invalidate CloudFront cache

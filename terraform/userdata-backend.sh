@@ -18,7 +18,7 @@ cd /opt/moviebooking
 # Env file (Terraform substitutes variables before this script runs)
 # Use single quotes for DB_PASSWORD and JWT_SECRET to prevent $ expansion in bash
 cat > /opt/moviebooking/env << EOF
-export SPRING_PROFILES_ACTIVE=prod
+export SPRING_PROFILES_ACTIVE=${spring_profile}
 export DB_HOST="${db_host}"
 export DB_PORT="${db_port}"
 export DB_NAME="${db_name}"
@@ -38,7 +38,7 @@ aws s3 cp s3://BUCKET_PLACEHOLDER/JAR_PLACEHOLDER app.jar --region $AWS_REGION |
   echo "JAR not found. Run CodePipeline or: aws s3 cp target/movie-booking-backend.jar s3://BUCKET_PLACEHOLDER/JAR_PLACEHOLDER"
   exit 1
 }
-nohup java -jar -Dspring.profiles.active=prod app.jar > /var/log/moviebooking.log 2>&1 &
+nohup java -jar app.jar > /var/log/moviebooking.log 2>&1 &
 echo $! > /opt/moviebooking/app.pid
 echo "Backend started"
 STARTSCRIPT

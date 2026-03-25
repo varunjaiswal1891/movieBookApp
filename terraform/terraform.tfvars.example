@@ -19,6 +19,9 @@ db_password       = "CHANGE_ME_STRONG_PASSWORD"
 # Secrets
 jwt_secret = "CHANGE_ME_32_CHAR_OR_LONGER_RANDOM_STRING"
 
+# Backend Spring profile on EC2 (stage | prod). Local dev uses no profile (H2 in application.yml).
+spring_profile = "stage"
+
 # CIDR allowed for SSH (use your IP for security, or 0.0.0.0/0 for anywhere)
 allowed_cidr = "0.0.0.0/0"
 

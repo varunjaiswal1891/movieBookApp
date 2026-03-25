@@ -20,6 +20,7 @@
     <properties>
         <java.version>17</java.version>
         <jjwt.version>0.12.5</jjwt.version>
+        <!-- Local: no profile (H2 from application.yml). Package with -Pstage or -Pprod for AWS. -->
     </properties>
 
     <dependencies>
@@ -130,6 +131,12 @@
     </build>
 
     <profiles>
+        <profile>
+            <id>stage</id>
+            <properties>
+                <spring.profiles.active>stage</spring.profiles.active>
+            </properties>
+        </profile>
         <profile>
             <id>prod</id>
             <properties>
