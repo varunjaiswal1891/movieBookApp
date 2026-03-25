@@ -38,6 +38,10 @@ resource "aws_codebuild_project" "main" {
       name  = "VITE_API_BASE_URL"
       value = "/api"
     }
+    environment_variable {
+      name  = "SPRING_PROFILES_ACTIVE"
+      value = var.spring_profile
+    }
   }
 
   source {

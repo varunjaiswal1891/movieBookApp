@@ -68,6 +68,18 @@ variable "jwt_secret" {
   sensitive   = true
 }
 
+# Spring profile on EC2 (CodeDeploy / env). Local dev uses no profile (H2 in application.yml).
+variable "spring_profile" {
+  description = "Spring profile for backend on EC2: stage or prod"
+  type        = string
+  default     = "stage"
+
+  validation {
+    condition     = contains(["stage", "prod"], var.spring_profile)
+    error_message = "spring_profile must be stage or prod for deployed EC2."
+  }
+}
+
 variable "allowed_cidr" {
   description = "CIDR allowed to access EC2 (e.g. your IP for SSH, or 0.0.0.0/0 for public)"
   type        = string

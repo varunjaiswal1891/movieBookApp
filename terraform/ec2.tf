@@ -22,19 +22,21 @@ resource "aws_instance" "backend" {
 
   user_data = base64encode(templatefile("${path.module}/userdata-backend.sh", {
     artifacts_bucket = aws_s3_bucket.artifacts.id
-    jar_key          = var.backend_jar_s3_key
-    aws_region       = var.aws_region
-    db_host          = aws_db_instance.main.address
-    db_port          = aws_db_instance.main.port
-    db_name          = aws_db_instance.main.db_name
-    db_user          = var.db_username
-    db_password      = var.db_password
-    jwt_secret       = var.jwt_secret
-    posters_bucket   = aws_s3_bucket.posters.id
+    jar_key            = var.backend_jar_s3_key
+    aws_region         = var.aws_region
+    db_host            = aws_db_instance.main.address
+    db_port            = aws_db_instance.main.port
+    db_name            = aws_db_instance.main.db_name
+    db_user            = var.db_username
+    db_password        = var.db_password
+    jwt_secret         = var.jwt_secret
+    posters_bucket     = aws_s3_bucket.posters.id
+    spring_profile     = var.spring_profile
   }))
 
   tags = {
-    Name = "${var.project_name}-backend"
+    Name           = "${var.project_name}-backend"
+    SpringProfile  = var.spring_profile
   }
 }
 

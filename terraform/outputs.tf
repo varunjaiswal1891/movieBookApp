@@ -42,6 +42,11 @@ output "rds_endpoint" {
   value       = aws_db_instance.main.endpoint
 }
 
+output "spring_profile" {
+  description = "Spring profile on EC2 (stage | prod); local dev uses application.yml (H2) with no profile"
+  value       = var.spring_profile
+}
+
 # CI/CD (when enable_cicd = true)
 output "pipeline_url" {
   description = "CodePipeline console URL"
