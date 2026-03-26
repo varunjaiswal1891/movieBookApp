@@ -3,8 +3,8 @@ brew tap hashicorp/tap
 brew install hashicorp/tap/terraform
 terraform version
 
-
- ssh-keygen -t rsa -b 4096 -f moviebook-key
+generate pub private key pair
+ssh-keygen -t rsa -b 4096 -f moviebook-key
 
 
 # 1. Configure
@@ -90,6 +90,12 @@ UPDATE app_users SET role = 'ADMIN' WHERE username = 'admin';
 UPDATE app_users SET role = 'ADMIN' WHERE email = 'admin@example.com';
 
 ==========================================
+
+check aws configure in terminal
+aws configure list 2>&1; echo "---"; aws sts get-caller-identity 2>&1
+
+aws configure list          # Where each setting comes from
+aws sts get-caller-identity # Verifies keys work and shows account/ARN
 
 On EC2 verify DB connectivity before restarting:
 source /opt/moviebooking/env
