@@ -50,11 +50,13 @@ public class AdminController {
 
     @PostMapping("/shows")
     public ResponseEntity<Show> createShow(@Valid @RequestBody Show show) {
+        System.out.println("Creating show: " + show);
         return ResponseEntity.ok(showService.createShow(show));
     }
 
     @DeleteMapping("/shows/{id}")
     public ResponseEntity<?> deleteShow(@PathVariable Long id) {
+        System.out.println("Deleting show: " + id);
         showService.deleteShow(id);
         return ResponseEntity.ok(Map.of("message", "Show deleted"));
     }
