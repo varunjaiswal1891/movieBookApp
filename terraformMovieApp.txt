@@ -91,6 +91,16 @@ UPDATE app_users SET role = 'ADMIN' WHERE email = 'admin@example.com';
 
 ==========================================
 
+everytime you rotate IAM access key we need to setup aws configure on termainal
+aws configure
+AWS Access Key ID	Paste the new access key ID
+AWS Secret Access Key	Paste the new secret key
+Default region name	e.g. us-east-1
+Default output format	json (or leave empty for default)
+
+aws sts get-caller-identity
+You should see your account and IAM user/role without errors
+
 check aws configure in terminal
 aws configure list 2>&1; echo "---"; aws sts get-caller-identity 2>&1
 
