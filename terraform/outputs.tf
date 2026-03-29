@@ -54,6 +54,16 @@ output "pipeline_url" {
 }
 
 output "pipeline_name" {
-  description = "CodePipeline name"
+  description = "CodePipeline name (primary branch)"
   value       = var.enable_cicd ? aws_codepipeline.main[0].name : null
+}
+
+output "pipeline_url_secondary" {
+  description = "CodePipeline console URL for the secondary branch (if enabled)"
+  value       = var.enable_cicd && var.github_branch_secondary != "" ? "https://${var.aws_region}.console.aws.amazon.com/codesuite/codepipeline/pipelines/${aws_codepipeline.secondary[0].name}/view" : null
+}
+
+output "pipeline_name_secondary" {
+  description = "CodePipeline name for github_branch_secondary"
+  value       = var.enable_cicd && var.github_branch_secondary != "" ? aws_codepipeline.secondary[0].name : null
 }

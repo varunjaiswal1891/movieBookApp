@@ -106,9 +106,24 @@ variable "github_repo" {
 }
 
 variable "github_branch" {
-  description = "Branch to deploy"
+  description = "Primary Git branch for the main CodePipeline (e.g. master, main)"
   type        = string
   default     = "master"
+}
+
+variable "github_branch_secondary" {
+  description = <<-EOT
+    Optional second Git branch that gets its own CodePipeline (same build, deploy, and EC2 as the primary).
+    Leave empty (\"\") to disable. Must not equal github_branch.
+    CodePipeline can only watch one branch per pipeline, so each branch needs a separate pipeline definition.
+  EOT
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.github_branch_secondary == "" || var.github_branch_secondary != var.github_branch
+    error_message = "github_branch_secondary must be empty or different from github_branch."
+  }
 }
 
 variable "enable_cicd" {

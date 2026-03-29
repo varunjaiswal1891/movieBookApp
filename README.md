@@ -235,7 +235,8 @@ Edit `terraform.tfvars`:
 - `db_username`, `db_password` — RDS
 - `jwt_secret` — long random string (e.g. ≥ 32 chars)
 - `ssh_public_key` — `cat ~/.ssh/id_rsa.pub`
-- `github_repo`, `github_branch` — CodePipeline source
+- `github_repo`, `github_branch` — primary CodePipeline source branch
+- `github_branch_secondary` — optional second branch (e.g. `stage`) that gets a **separate** pipeline name like `moviebook-pipeline-stage`. Leave `""` to disable. Each branch needs its own pipeline (AWS limit: one branch per Git source action).
 - `spring_profile` — `stage` (default) or `prod`
 
 **Optional:** store the whole `terraform.tfvars` in **AWS Secrets Manager** — see [Secrets Manager for `terraform.tfvars`](#secrets-manager-for-terraformtfvars).
@@ -259,10 +260,11 @@ RDS often takes 5–10 minutes. EC2 userdata waits for RDS.
 
 ### Step 4: Deploy via pipeline
 
-Push to the configured branch. CodeBuild runs `buildspec.yml` (backend JAR, frontend, S3, CloudFront invalidation); CodeDeploy runs `scripts/codedeploy/*.sh` on EC2.
+Push to the configured **primary** branch (`github_branch`) or, if set, the **secondary** branch (`github_branch_secondary`). Each enabled branch has its own pipeline; both use the same CodeBuild project, CodeDeploy application, and EC2 instance unless you change Terraform.
 
 ```bash
 terraform -chdir=terraform output pipeline_url
+terraform -chdir=terraform output pipeline_url_secondary   # non-null only if github_branch_secondary is set
 ```
 
 ### Manual deploy (fallback)
