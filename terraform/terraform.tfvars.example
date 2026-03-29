@@ -8,7 +8,8 @@ environment = "prod"
 project_name = "moviebook"
 
 # EC2 (free tier: t2.micro)
-ec2_instance_type = "t2.micro"
+ec2_instance_type   = "t2.micro"
+ec2_root_volume_gb  = 20
 
 # RDS (free tier: db.t3.micro)
 db_instance_class = "db.t3.micro"
@@ -29,13 +30,12 @@ allowed_cidr = "0.0.0.0/0"
 # Paste the contents of moviebook-key.pub
 ssh_public_key = "ssh-rsa AAAAB3... your@email.com"
 
-# CI/CD – CodePipeline source (GitHub); one pipeline per branch (AWS limitation)
-github_repo              = "varunjaiswal1891/movieBookApp"
-github_branch            = "main"
-github_branch_secondary  = "stage" # optional second pipeline; use "" to disable only primary
-# Spring profile for the secondary pipeline CodeBuild + EC2 runtime after deploy (master pipeline uses spring_profile from codebuild.tf / EC2 userdata default)
-cicd_secondary_spring_profile = "stage"
-enable_cicd              = true
+# CI/CD – two pipelines: github_branch (e.g. main/master) + github_branch_secondary (e.g. stage). Use "" to disable the second.
+github_repo                   = "varunjaiswal1891/movieBookApp"
+github_branch                 = "main"
+github_branch_secondary       = "stage"
+cicd_secondary_spring_profile = "stage" # CodeBuild/runtime for the stage-branch pipeline only
+enable_cicd                   = true
 
 # Optional: your IAM user ARN for manual aws s3 cp to the artifacts bucket from your laptop
 # artifacts_upload_iam_arns = ["arn:aws:iam::YOUR_ACCOUNT_ID:user/YOUR_USER"]
