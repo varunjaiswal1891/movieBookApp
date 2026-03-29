@@ -132,6 +132,17 @@ variable "enable_cicd" {
   default     = true
 }
 
+variable "cicd_secondary_spring_profile" {
+  description = "Spring profile for the secondary-branch pipeline (CodeBuild + runtime on EC2 after deploy). Only used when github_branch_secondary is non-empty."
+  type        = string
+  default     = "stage"
+
+  validation {
+    condition     = contains(["stage", "prod"], var.cicd_secondary_spring_profile)
+    error_message = "cicd_secondary_spring_profile must be stage or prod."
+  }
+}
+
 # Optional: IAM user/role ARNs allowed to upload JAR via CLI (aws s3 cp). EC2 role already has GetObject.
 variable "artifacts_upload_iam_arns" {
   description = "IAM principal ARNs that may PutObject to the artifacts bucket (e.g. manual aws s3 cp from your laptop)"
