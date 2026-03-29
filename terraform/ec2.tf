@@ -44,4 +44,9 @@ resource "aws_instance" "backend" {
 resource "aws_key_pair" "backend" {
   key_name   = "${var.project_name}-backend-key"
   public_key = var.ssh_public_key
+
+  # Avoid replace after import (EC2 rejects duplicate key name); rotate by changing key_name if needed.
+  lifecycle {
+    ignore_changes = [public_key]
+  }
 }

@@ -9,6 +9,12 @@ resource "aws_db_subnet_group" "main" {
   tags = {
     Name = "${var.project_name}-db-subnet"
   }
+
+  # If this group was created/imported in another VPC, Terraform must not replace subnet_ids
+  # in-place (RDS rejects subnets from a different VPC). Align state/VPC or migrate DB separately.
+  lifecycle {
+    ignore_changes = [subnet_ids]
+  }
 }
 
 resource "aws_db_instance" "main" {
@@ -33,5 +39,14 @@ resource "aws_db_instance" "main" {
 
   tags = {
     Name = "${var.project_name}-mysql"
+  }
+
+  # Imported RDS may live in an older VPC while aws_security_group.rds is in Terraform’s
+  # current VPC; ModifyDBInstance cannot attach cross-VPC SGs. Reconcile by migrating RDS
+  # or importing the original VPC, then remove this block.
+  lifecycle {
+    ignore_changes = [
+      vpc_security_group_ids,
+    ]
   }
 }
