@@ -25,6 +25,7 @@ public class BookingController {
     @GetMapping("/my")
     public ResponseEntity<List<Booking>> getMyBookings(
             @AuthenticationPrincipal UserDetails userDetails) {
+        System.out.println("getMyBookings");
         Long userId = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"))
                 .getId();
@@ -35,6 +36,7 @@ public class BookingController {
     public ResponseEntity<Booking> createBooking(
             @Valid @RequestBody BookingRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
+        System.out.println("createBooking");
         return ResponseEntity.ok(
                 bookingService.createBooking(request, userDetails.getUsername()));
     }
