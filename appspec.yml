@@ -10,8 +10,10 @@ os: linux
 files:
   - source: app.jar
     destination: /opt/moviebooking
+    overwrite: true
   - source: spring-profile
     destination: /opt/moviebooking
+    overwrite: true
 
 hooks:
   ApplicationStop:
