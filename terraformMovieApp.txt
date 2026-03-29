@@ -65,10 +65,7 @@ rds_endpoint = "moviebook-db.cqpy2eki8enc.us-east-1.rds.amazonaws.com:3306"
 
 ssh to EC2 instance -
 ssh -i "varun-imageapp-keypair.pem" ec2-user@ec2-65-0-180-197.ap-south-1.compute.amazonaws.com
-ssh -i "moviebook-key" ec2-user@ec2-3-228-10-232.compute-1.amazonaws.com
-ssh -i "moviebook-key" ec2-user@ec2-44-203-239-179.compute-1.amazonaws.com
-
-ssh -i "moviebook-key" ec2-user@ec2-98-92-215-142.compute-1.amazonaws.com
+ssh -i "moviebook-key.pem" ec2-user@ec2-100-53-254-184.compute-1.amazonaws.com
 
 
 Invalidate CloudFront cache
@@ -84,6 +81,7 @@ mysql -h moviebook-db.xxxxx.us-east-1.rds.amazonaws.com -u adminVarun -p moviebo
 
 mysql -h moviebook-db.cqpy2eki8enc.us-east-1.rds.amazonaws.com -u adminVarun -p moviebookingdb
 mysql -h moviebook-db.cqpy2eki8enc.us-east-1.rds.amazonaws.com -u adminVarun -p moviebookingdb
+mysql -h moviebook-db.cqpy2eki8enc.us-east-1.rds.amazonaws.com -P 3306 -u adminVarun -p --ssl-mode=VERIFY_IDENTITY --ssl-ca=./global-bundle.pem
 
 UPDATE app_users SET role = 'ADMIN' WHERE username = 'admin';
 -- or
