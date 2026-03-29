@@ -20,6 +20,13 @@ resource "aws_instance" "backend" {
   vpc_security_group_ids = [aws_security_group.backend.id]
   iam_instance_profile   = aws_iam_instance_profile.backend.name
 
+  root_block_device {
+    volume_type           = "gp3"
+    volume_size           = var.ec2_root_volume_gb
+    delete_on_termination = true
+    encrypted             = true
+  }
+
   user_data = base64encode(templatefile("${path.module}/userdata-backend.sh", {
     artifacts_bucket = aws_s3_bucket.artifacts.id
     jar_key            = var.backend_jar_s3_key
