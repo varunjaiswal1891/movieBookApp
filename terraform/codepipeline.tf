@@ -71,7 +71,7 @@ resource "aws_codepipeline" "main" {
   }
 }
 
-# Second pipeline for another branch (same CodeBuild / CodeDeploy / EC2 target as AWS design: one branch per pipeline).
+# Second pipeline for another branch (same CodeBuild project + CodeDeploy group + EC2; branch-specific Spring profile via env override).
 resource "aws_codepipeline" "secondary" {
   count = var.enable_cicd && var.github_branch_secondary != "" ? 1 : 0
 
@@ -116,7 +116,14 @@ resource "aws_codepipeline" "secondary" {
       output_artifacts = ["build"]
 
       configuration = {
-        ProjectName = aws_codebuild_project.main[0].name
+        ProjectName          = aws_codebuild_project.main[0].name
+        EnvironmentVariables = jsonencode([
+          {
+            name  = "SPRING_PROFILES_ACTIVE"
+            value = var.cicd_secondary_spring_profile
+            type  = "PLAINTEXT"
+          }
+        ])
       }
     }
   }

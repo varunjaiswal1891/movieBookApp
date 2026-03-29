@@ -10,6 +10,8 @@ os: linux
 files:
   - source: app.jar
     destination: /opt/moviebooking
+  - source: spring-profile
+    destination: /opt/moviebooking
 
 hooks:
   ApplicationStop:

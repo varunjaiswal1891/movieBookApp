@@ -29,6 +29,7 @@ phases:
 
       - echo "Preparing CodeDeploy revision..."
       - mkdir -p deploy/scripts
+      - printf '%s' "${SPRING_PROFILES_ACTIVE:-stage}" > deploy/spring-profile
       - cp movie-booking-backend/target/movie-booking-backend.jar deploy/app.jar
       - cp appspec.yml deploy/
       - cp scripts/codedeploy/*.sh deploy/scripts/

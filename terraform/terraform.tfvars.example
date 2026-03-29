@@ -33,6 +33,8 @@ ssh_public_key = "ssh-rsa AAAAB3... your@email.com"
 github_repo              = "varunjaiswal1891/movieBookApp"
 github_branch            = "main"
 github_branch_secondary  = "stage" # optional second pipeline; use "" to disable only primary
+# Spring profile for the secondary pipeline CodeBuild + EC2 runtime after deploy (master pipeline uses spring_profile from codebuild.tf / EC2 userdata default)
+cicd_secondary_spring_profile = "stage"
 enable_cicd              = true
 
 # Optional: your IAM user ARN for manual aws s3 cp to the artifacts bucket from your laptop

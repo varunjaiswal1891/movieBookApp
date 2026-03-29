@@ -7,6 +7,10 @@ APP_DIR=/opt/moviebooking
 cd "$APP_DIR"
 source /opt/moviebooking/env
 
+# Prefer profile shipped with this deployment (set per pipeline branch in CodeBuild)
+if [ -f "$APP_DIR/spring-profile" ]; then
+  export SPRING_PROFILES_ACTIVE="$(tr -d '\r\n' < "$APP_DIR/spring-profile")"
+fi
 export SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE:-stage}"
 
 nohup java -jar "$APP_DIR/app.jar" \
