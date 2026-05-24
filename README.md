@@ -75,14 +75,16 @@ movieBookApp/
 │   └── pom.xml
 ├── movie-booking-frontend/       # React + Vite + Tailwind
 ├── terraform/                    # AWS infrastructure (IaC)
-│   ├── provider.tf, variables.tf, vpc.tf, rds.tf, ec2.tf, s3.tf
-│   ├── cloudfront.tf, security-groups.tf, iam.tf, iam-cicd.tf
-│   ├── codestar.tf, codebuild.tf, codedeploy.tf, codepipeline.tf
-│   ├── outputs.tf, userdata-backend.sh
+│   ├── provider.tf, variables.tf, outputs.tf, modules.tf, moved.tf
+│   ├── cloudfront.tf, security-groups.tf, rds.tf, s3.tf
+│   ├── codestar.tf, codebuild.tf, codedeploy.tf, codepipeline.tf, iam-cicd.tf
+│   ├── network-rds-alignment.tf, userdata-backend.sh
+│   ├── modules/network/          # VPC, subnets, IGW, route table
+│   ├── modules/compute/          # EC2, key pair, backend IAM + profile
 │   └── terraform.tfvars.example
 ├── buildspec.yml                 # CodeBuild
 ├── appspec.yml                   # CodeDeploy
-├── scripts/codedeploy/           # stop.sh, start.sh
+├── scripts/codedeploy/           # stop.sh, start.sh, validate.sh
 └── README.md                     # This file (setup + reference)
 ```
 
