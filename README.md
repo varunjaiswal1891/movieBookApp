@@ -217,6 +217,12 @@ Deploy the app to AWS using Terraform. Uses **free-tier–eligible** shapes wher
 
 **Flow:** One CloudFront — `/*` → S3, `/api/*` → EC2. **Pipeline:** GitHub → CodeBuild (JAR + frontend) → CodeDeploy (EC2) + S3 sync.
 
+Current decision:
+
+- API Gateway has been intentionally removed from this stack for operational simplicity.
+- `/api/*` is served directly by backend EC2 through CloudFront.
+- API Gateway can be reintroduced later once IAM/network controls are finalized.
+
 ### Prerequisites
 
 - [Terraform](https://www.terraform.io/downloads) ≥ 1.5
@@ -302,6 +308,33 @@ Tables come from Hibernate / `schema-mysql.sql` as configured. Add users via **S
 | SPA 404 on refresh | CloudFront error pages → `index.html` |
 | Blank UI | `VITE_API_BASE_URL=/api` for same-origin via CloudFront |
 
+### Why we added deployment and network safeguards
+
+Two production issues motivated extra safeguards in Terraform/CodeDeploy:
+
+1. **False-success deployments:** CodeDeploy `ApplicationStart` could pass even when Spring crashed seconds later.
+2. **API 503 after infra changes:** backend EC2 ended up in a different VPC than existing RDS, so DB connections timed out and `/api` requests failed.
+
+Safeguards now in place:
+
+- **CodeDeploy `ValidateService` hook**
+  - `appspec.yml` now runs `scripts/codedeploy/validate.sh` after `ApplicationStart`.
+  - The hook retries `http://127.0.0.1:8080/actuator/health` (or port 8080 fallback) and fails deployment if app is not healthy.
+  - This prevents "green" deployments when the JVM exits due to startup/runtime errors.
+
+- **Backend↔RDS VPC alignment in Terraform**
+  - `terraform/network-rds-alignment.tf` resolves backend network placement from the existing DB subnet group VPC.
+  - EC2 backend subnet and security groups are created/selected in the same VPC context as RDS.
+  - Runtime DB SG ingress is added for backend SG (`3306`), so API traffic does not fail due to cross-VPC DB isolation.
+
+- **No API Gateway in active path (for now)**
+  - API Gateway resources were removed from Terraform and AWS.
+  - CloudFront `/api/*` now points directly to EC2 origin (`EC2-backend` on port `8080`).
+
+Operational note:
+
+- If Terraform plans **EC2 replacement** while aligning VPC/subnet, that is expected once. Apply during a maintenance window if possible.
+
 ---
 
 ## Spring profile on EC2
@@ -333,7 +366,7 @@ Infrastructure is **one** backend instance, **one** CodePipeline (V2), and **one
                                          ▼
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                    CLOUDFRONT (single HTTPS entry)                          │
-│   /*        → S3 (React SPA)          /api/*  → EC2:8080 (Spring Boot)     │
+│   /*        → S3 (React SPA)          /api/*  → EC2:8080 (Spring Boot)      │
 └─────────────┬──────────────────────────────────────┬───────────────────────┘
               │                                      │
               ▼                                      ▼

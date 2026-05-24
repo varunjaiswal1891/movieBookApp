@@ -4,9 +4,9 @@
 
 # Backend EC2 – HTTP from API Gateway/public, SSH from allowed CIDR
 resource "aws_security_group" "backend" {
-  name        = "${var.project_name}-backend-sg"
+  name        = "${var.project_name}-${var.environment}-backend-sg"
   description = "Backend EC2 - HTTP 8080, SSH"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = local.backend_vpc_id
 
   ingress {
     description = "HTTP from API Gateway / anywhere"
@@ -38,9 +38,9 @@ resource "aws_security_group" "backend" {
 
 # RDS MySQL – only from backend EC2
 resource "aws_security_group" "rds" {
-  name        = "${var.project_name}-rds-sg"
+  name        = "${var.project_name}-${var.environment}-rds-sg"
   description = "RDS MySQL - 3306 from backend only"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = local.backend_vpc_id
 
   ingress {
     description     = "MySQL from backend"
