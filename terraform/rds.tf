@@ -4,7 +4,7 @@
 
 resource "aws_db_subnet_group" "main" {
   name       = "${var.project_name}-db-subnet"
-  subnet_ids = aws_subnet.private[*].id
+  subnet_ids = module.network.private_subnet_ids
 
   tags = {
     Name = "${var.project_name}-db-subnet"

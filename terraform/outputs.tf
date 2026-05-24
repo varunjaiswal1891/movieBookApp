@@ -19,7 +19,7 @@ output "cloudfront_hosted_zone_id" {
 
 output "backend_ec2_public_ip" {
   description = "EC2 public IP (for SSH, direct API access)"
-  value       = aws_instance.backend.public_ip
+  value       = module.compute.backend_public_ip
 }
 
 output "artifacts_bucket" {

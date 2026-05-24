@@ -36,7 +36,7 @@ resource "aws_cloudfront_distribution" "main" {
 
   # Origin 2: EC2 (backend)
   origin {
-    domain_name = "${aws_instance.backend.public_dns}"
+    domain_name = module.compute.backend_public_dns
     origin_id   = "EC2-backend"
 
     custom_origin_config {
