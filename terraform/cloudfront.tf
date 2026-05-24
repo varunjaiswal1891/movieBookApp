@@ -3,8 +3,11 @@
 # Single distribution: /* → S3, /api/* → EC2
 # ─────────────────────────────────────────────────────────────────────────────
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_cloudfront_origin_access_control" "frontend" {
-  name                              = "${var.project_name}-frontend-oac"
+  # Include environment/account to avoid OAC name collisions in the same account.
+  name                              = "${var.project_name}-${var.environment}-${data.aws_caller_identity.current.account_id}-frontend-oac"
   description                       = "OAC for frontend S3"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"

@@ -20,7 +20,6 @@ phases:
 
   build:
     commands:
-      - echo "EC2 will run Spring profile $SPRING_PROFILES_ACTIVE (set in Terraform spring_profile)"
       - echo "Building Spring Boot backend..."
       - cd movie-booking-backend && mvn package -DskipTests -q && cd ..
 
@@ -29,7 +28,22 @@ phases:
 
       - echo "Preparing CodeDeploy revision..."
       - mkdir -p deploy/scripts
-      - printf '%s' "${SPRING_PROFILES_ACTIVE:-stage}" > deploy/spring-profile
+      - |
+        if [ -n "${CODEPIPELINE_BRANCH:-}" ]; then
+          BREF="${CODEPIPELINE_BRANCH#refs/heads/}"
+          if [ "$BREF" = "${GITHUB_BRANCH_PRIMARY}" ] || [ "$CODEPIPELINE_BRANCH" = "${GITHUB_BRANCH_PRIMARY}" ]; then
+            SPRING_PROFILE_SELECTED="${SPRING_PROFILE_PRIMARY:-stage}"
+          elif [ -n "${GITHUB_BRANCH_SECONDARY}" ] && { [ "$BREF" = "${GITHUB_BRANCH_SECONDARY}" ] || [ "$CODEPIPELINE_BRANCH" = "${GITHUB_BRANCH_SECONDARY}" ]; }; then
+            SPRING_PROFILE_SELECTED="${SPRING_PROFILE_SECONDARY:-stage}"
+          else
+            echo "Unknown branch from pipeline: ${CODEPIPELINE_BRANCH}; using SPRING_PROFILES_ACTIVE"
+            SPRING_PROFILE_SELECTED="${SPRING_PROFILES_ACTIVE:-stage}"
+          fi
+        else
+          SPRING_PROFILE_SELECTED="${SPRING_PROFILES_ACTIVE:-stage}"
+        fi
+        echo "Spring profile for this revision: $SPRING_PROFILE_SELECTED (branch=${CODEPIPELINE_BRANCH:-local})"
+        printf '%s' "$SPRING_PROFILE_SELECTED" > deploy/spring-profile
       - cp movie-booking-backend/target/movie-booking-backend.jar deploy/app.jar
       - cp appspec.yml deploy/
       - cp scripts/codedeploy/*.sh deploy/scripts/

@@ -9,6 +9,7 @@ project_name = "moviebook"
 
 # EC2 (free tier: t2.micro)
 ec2_instance_type = "t2.micro"
+# ec2_root_volume_gb = 30   # default 30 GiB; must be >= AMI snapshot size
 
 # RDS (free tier: db.t3.micro)
 db_instance_class = "db.t3.micro"
@@ -19,7 +20,7 @@ db_password       = "CHANGE_ME_STRONG_PASSWORD"
 # Secrets
 jwt_secret = "CHANGE_ME_32_CHAR_OR_LONGER_RANDOM_STRING"
 
-# Backend Spring profile on EC2 (stage | prod). Local dev uses no profile (H2 in application.yml).
+# Primary branch pipeline + EC2 userdata: Spring profile (stage|prod). Same EC2/RDS as secondary pipeline.
 spring_profile = "stage"
 
 # CIDR allowed for SSH (use your IP for security, or 0.0.0.0/0 for anywhere)
@@ -29,11 +30,11 @@ allowed_cidr = "0.0.0.0/0"
 # Paste the contents of moviebook-key.pub
 ssh_public_key = "ssh-rsa AAAAB3... your@email.com"
 
-# CI/CD – CodePipeline source (GitHub); one pipeline per branch (AWS limitation)
+# CI/CD – one EC2, one CodeDeploy group, one CodeBuild project; two pipelines = two Git branches (AWS: one branch per pipeline)
 github_repo              = "varunjaiswal1891/movieBookApp"
-github_branch            = "main"
-github_branch_secondary  = "stage" # optional second pipeline; use "" to disable only primary
-# Spring profile for the secondary pipeline CodeBuild + EC2 runtime after deploy (master pipeline uses spring_profile from codebuild.tf / EC2 userdata default)
+github_branch            = "master"
+github_branch_secondary  = "stage" # optional; "" = disable secondary pipeline
+# Profile for secondary branch build/deploy (e.g. stage). Primary branch uses spring_profile above.
 cicd_secondary_spring_profile = "stage"
 enable_cicd              = true
 

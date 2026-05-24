@@ -1,6 +1,12 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # CodeDeploy – Deploy backend JAR to EC2
 # Free tier: EC2/on-premises deployments are free
+#
+# Single EC2 for all branches: one deployment group targets instances tagged
+# Name = {project_name}-backend. The single CodePipeline (all configured Git branches)
+# deploys the same CodeDeploy app/group → same instance(s). Last successful
+# deployment wins on disk; Spring profile per deploy comes from buildspec spring-profile
+# (CodeBuild env SPRING_PROFILES_ACTIVE per pipeline).
 # ─────────────────────────────────────────────────────────────────────────────
 
 resource "aws_codedeploy_app" "main" {

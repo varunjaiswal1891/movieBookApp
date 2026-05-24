@@ -136,3 +136,19 @@ terraform output -raw app_url
 admin / Admin@1234 (ADMIN)
 john / User@1234 (USER)
 jane / User@1234 (USER)
+
+=================================================
+
+export AWS_REGION=us-east-1
+export SECRET_NAME="moviebook/terraform-tfvars"
+aws secretsmanager get-secret-value \
+  --region "$AWS_REGION" \
+  --secret-id "$SECRET_NAME" \
+  --query SecretString \
+  --output text > terraform/terraform.tfvars
+
+chmod 600 terraform/terraform.tfvars
+
+cd terraform && terraform init && terraform plan
+
+===============================================

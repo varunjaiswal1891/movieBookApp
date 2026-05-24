@@ -1,5 +1,6 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # EC2 – Backend (Spring Boot)
+# One instance per stack: all CodePipeline branches deploy here (same CodeDeploy group).
 # ─────────────────────────────────────────────────────────────────────────────
 
 data "aws_ami" "amazon_linux" {

@@ -37,8 +37,13 @@ variable "ec2_ami_owner" {
 variable "ec2_root_volume_gb" {
   description = "Root EBS volume size (GiB). CodeDeploy + logs fill small disks quickly; use at least 16–20 for CI/CD nodes."
   type          = number
-  default       = 20
+  default       = 30
   # AL2023 AMIs are often 8 GiB by default; undersized roots cause CodeDeploy \"No space left on device\" errors.
+
+  validation {
+    condition     = var.ec2_root_volume_gb >= 30
+    error_message = "ec2_root_volume_gb must be >= 30 to satisfy the current AMI snapshot minimum size."
+  }
 }
 
 # ── RDS (MySQL) ──────────────────────────────────────────────────────────────
@@ -77,7 +82,11 @@ variable "jwt_secret" {
 
 # Spring profile on EC2 (CodeDeploy / env). Local dev uses no profile (H2 in application.yml).
 variable "spring_profile" {
-  description = "Spring profile for backend on EC2: stage or prod"
+  description = <<-EOT
+    Spring profile for EC2 userdata (/opt/moviebooking/env) and for builds from github_branch (primary);
+    application-{profile}.yml on AWS. Secondary git branch uses cicd_secondary_spring_profile (buildspec).
+    Single CodePipeline + one EC2: last deploy wins at runtime.
+  EOT
   type        = string
   default     = "stage"
 
@@ -120,9 +129,9 @@ variable "github_branch" {
 
 variable "github_branch_secondary" {
   description = <<-EOT
-    Optional second Git branch that gets its own CodePipeline (same build, deploy, and EC2 as the primary).
+    Optional second Git branch that also triggers the single CodePipeline on push (with github_branch).
     Leave empty (\"\") to disable. Must not equal github_branch.
-    CodePipeline can only watch one branch per pipeline, so each branch needs a separate pipeline definition.
+    Spring profile for this branch is cicd_secondary_spring_profile; primary branch uses spring_profile (see buildspec).
   EOT
   type        = string
   default     = ""
@@ -140,7 +149,10 @@ variable "enable_cicd" {
 }
 
 variable "cicd_secondary_spring_profile" {
-  description = "Spring profile for the secondary-branch pipeline (CodeBuild + runtime on EC2 after deploy). Only used when github_branch_secondary is non-empty."
+  description = <<-EOT
+    Spring profile when the pipeline runs from github_branch_secondary (e.g. stage). Build writes deploy/spring-profile;
+    only used when github_branch_secondary is non-empty. Same single pipeline, EC2, and RDS as the primary branch.
+  EOT
   type        = string
   default     = "stage"
 

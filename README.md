@@ -8,7 +8,7 @@ A full-stack movie ticket booking application with local development and AWS dep
 | **Backend** | Java 17 + Spring Boot 3 + Spring Security (JWT) |
 | **Database** | H2 (local, no profile) · MySQL RDS (`stage` or `prod` on AWS) |
 | **Storage** | AWS S3 (movie posters) |
-| **Deployment** | Terraform + CodePipeline (CodeBuild, CodeDeploy) |
+| **Deployment** | Terraform; **one** CodePipeline V2 (push: `master` + optional 2nd branch) → CodeBuild → CodeDeploy → **one EC2** + RDS |
 | **AI Feature** | In-app content-based + collaborative-filtering recommendations |
 
 ---
@@ -236,7 +236,7 @@ Edit `terraform.tfvars`:
 - `jwt_secret` — long random string (e.g. ≥ 32 chars)
 - `ssh_public_key` — `cat ~/.ssh/id_rsa.pub`
 - `github_repo`, `github_branch` — primary CodePipeline source branch
-- `github_branch_secondary` — optional second branch (e.g. `stage`) that gets a **separate** pipeline name like `moviebook-pipeline-stage`. Leave `""` to disable. Each branch needs its own pipeline (AWS limit: one branch per Git source action).
+- `github_branch_secondary` — optional second branch (e.g. `stage`) that **also** starts the **same** pipeline on push. Leave `""` for primary branch only. (`spring_profile` / `cicd_secondary_spring_profile` select runtime per branch in `buildspec.yml`.)
 - `spring_profile` — `stage` (default) or `prod`
 
 **Optional:** store the whole `terraform.tfvars` in **AWS Secrets Manager** — see [Secrets Manager for `terraform.tfvars`](#secrets-manager-for-terraformtfvars).
@@ -260,11 +260,10 @@ RDS often takes 5–10 minutes. EC2 userdata waits for RDS.
 
 ### Step 4: Deploy via pipeline
 
-Push to the configured **primary** branch (`github_branch`) or, if set, the **secondary** branch (`github_branch_secondary`). Each enabled branch has its own pipeline; both use the same CodeBuild project, CodeDeploy application, and EC2 instance unless you change Terraform.
+Push to **`github_branch`** or (if set) **`github_branch_secondary`** — one **CodePipeline V2** runs with a push trigger on both; same CodeBuild project, CodeDeploy group, and EC2.
 
 ```bash
 terraform -chdir=terraform output pipeline_url
-terraform -chdir=terraform output pipeline_url_secondary   # non-null only if github_branch_secondary is set
 ```
 
 ### Manual deploy (fallback)
@@ -311,6 +310,13 @@ Tables come from Hibernate / `schema-mysql.sql` as configured. Add users via **S
 - Written to **`/opt/moviebooking/env`** as `SPRING_PROFILES_ACTIVE` (userdata). CodeBuild also receives it for logging.
 - **`scripts/codedeploy/start.sh`** sources `env` and falls back to **`stage`** if unset.
 - Changing profile for **existing** EC2: update `terraform.tfvars`, apply (may need **instance replace** so userdata rewrites `env`), or **edit `/opt/moviebooking/env`** and restart Java.
+
+### One EC2 for stage + prod (both pipelines)
+
+Infrastructure is **one** backend instance, **one** CodePipeline (V2), and **one** CodeDeploy deployment group. Pushes to **`github_branch`** and (if set) **`github_branch_secondary`** trigger the same pipeline; **buildspec** sets `deploy/spring-profile` from the branch via `CODEPIPELINE_BRANCH`. **RDS** is shared.
+
+- **Primary** branch → **`spring_profile`**; **secondary** branch → **`cicd_secondary_spring_profile`**.
+- The deployment that **finished last** sets runtime profile on disk; both YAML profiles use the same RDS unless you change config.
 
 ---
 

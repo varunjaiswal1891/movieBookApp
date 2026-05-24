@@ -7,7 +7,7 @@ resource "aws_codebuild_project" "main" {
   count = var.enable_cicd ? 1 : 0
 
   name          = "${var.project_name}-build"
-  description   = "Build backend + frontend, deploy frontend to S3"
+  description   = "Build backend + frontend, deploy frontend to S3; one project shared by all pipelines (single EC2 deploy target)"
   service_role  = aws_iam_role.codebuild[0].arn
   build_timeout = 20
 
@@ -41,6 +41,23 @@ resource "aws_codebuild_project" "main" {
     environment_variable {
       name  = "SPRING_PROFILES_ACTIVE"
       value = var.spring_profile
+    }
+    # Matched in buildspec against CODEPIPELINE_BRANCH (set by pipeline from the Git push).
+    environment_variable {
+      name  = "SPRING_PROFILE_PRIMARY"
+      value = var.spring_profile
+    }
+    environment_variable {
+      name  = "SPRING_PROFILE_SECONDARY"
+      value = var.cicd_secondary_spring_profile
+    }
+    environment_variable {
+      name  = "GITHUB_BRANCH_PRIMARY"
+      value = var.github_branch
+    }
+    environment_variable {
+      name  = "GITHUB_BRANCH_SECONDARY"
+      value = var.github_branch_secondary
     }
   }
 
