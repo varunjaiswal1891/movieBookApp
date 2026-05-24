@@ -28,3 +28,10 @@ provider "aws" {
     }
   }
 }
+
+# API Gateway creation can fail for IAM users without tag permissions.
+# Use this alias for resources where we need to skip provider-level default tags.
+provider "aws" {
+  alias  = "no_tags"
+  region = var.aws_region
+}

@@ -17,6 +17,11 @@ output "cloudfront_hosted_zone_id" {
   value       = aws_cloudfront_distribution.main.hosted_zone_id
 }
 
+output "api_gateway_url" {
+  description = "HTTP API Gateway invoke URL (default stage)"
+  value       = aws_apigatewayv2_stage.backend_default.invoke_url
+}
+
 output "backend_ec2_public_ip" {
   description = "EC2 public IP (for SSH, direct API access)"
   value       = aws_instance.backend.public_ip

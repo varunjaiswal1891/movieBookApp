@@ -2,14 +2,14 @@
 # Security Groups – EC2 (backend) and RDS (MySQL)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Backend EC2 – HTTP from CloudFront, SSH from allowed CIDR
+# Backend EC2 – HTTP from API Gateway/public, SSH from allowed CIDR
 resource "aws_security_group" "backend" {
   name        = "${var.project_name}-backend-sg"
   description = "Backend EC2 - HTTP 8080, SSH"
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description = "HTTP from CloudFront / anywhere"
+    description = "HTTP from API Gateway / anywhere"
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"

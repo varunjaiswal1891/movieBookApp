@@ -1,6 +1,6 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# CloudFront – Frontend (S3) + API proxy to backend (EC2)
-# Single distribution: /* → S3, /api/* → EC2
+# CloudFront – Frontend (S3) + API proxy via API Gateway
+# Single distribution: /* → S3, /api/* → API Gateway → EC2
 # ─────────────────────────────────────────────────────────────────────────────
 
 data "aws_caller_identity" "current" {}
@@ -28,17 +28,17 @@ resource "aws_cloudfront_distribution" "main" {
     origin_access_control_id  = aws_cloudfront_origin_access_control.frontend.id
   }
 
-  # Origin 2: EC2 (backend)
+  # Origin 2: API Gateway (backend entrypoint)
   origin {
-    domain_name = "${aws_instance.backend.public_dns}"
-    origin_id   = "EC2-backend"
+    domain_name = replace(aws_apigatewayv2_api.backend.api_endpoint, "https://", "")
+    origin_id   = "APIGW-backend"
 
     custom_origin_config {
-      http_port                = 8080
+      http_port                = 80
       https_port               = 443
-      origin_protocol_policy   = "http-only"
+      origin_protocol_policy   = "https-only"
       origin_ssl_protocols     = ["TLSv1.2"]
-      # Default 30s often causes 504 on first API calls while RDS/Hikari connects (max allowed is 60)
+      # API Gateway HTTP API max integration timeout is 30s.
       origin_read_timeout      = 60
       origin_keepalive_timeout = 5
     }
@@ -59,10 +59,10 @@ resource "aws_cloudfront_distribution" "main" {
     }
   }
 
-  # /api/* → backend EC2
+  # /api/* → API Gateway
   ordered_cache_behavior {
     path_pattern           = "/api/*"
-    target_origin_id        = "EC2-backend"
+    target_origin_id        = "APIGW-backend"
     viewer_protocol_policy = "redirect-to-https"
     allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods         = ["GET", "HEAD"]
