@@ -12,6 +12,12 @@ resource "aws_cloudfront_origin_access_control" "frontend" {
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
+
+  # Existing stacks may already have a differently named OAC attached to the distribution.
+  # Avoid in-place renames that can collide with other retained OAC names.
+  lifecycle {
+    ignore_changes = [name]
+  }
 }
 
 resource "aws_cloudfront_distribution" "main" {
