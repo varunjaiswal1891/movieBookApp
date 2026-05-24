@@ -369,6 +369,43 @@ Infrastructure is **one** backend instance, **one** CodePipeline (V2), and **one
 - Private subnets; SG allows **3306** only from EC2 SG.
 - Spring: `jdbc:mysql://<host>:3306/...` with `DB_HOST`, `DB_USER`, `DB_PASSWORD` from EC2 env.
 
+#### Connect to RDS from EC2 (and run basic SQL)
+
+SSH into backend EC2, then run:
+
+```bash
+# 1) Load app env vars written by userdata/CodeDeploy
+source /opt/moviebooking/env
+
+# 2) Install MySQL client (Amazon Linux 2023)
+sudo dnf install -y mariadb105
+
+# 3) Connect to RDS MySQL
+mysql -h "$DB_HOST" -P 3306 -u "$DB_USER" -p
+```
+
+In the MySQL prompt:
+
+```sql
+-- List all databases
+SHOW DATABASES;
+
+-- Switch to app database (replace with your DB name from terraform tfvars)
+USE <your_db_name>;
+
+-- List tables in current database
+SHOW TABLES;
+
+-- Show users and allowed hosts (requires mysql.user access)
+SELECT user, host FROM mysql.user;
+```
+
+If `mysql.user` is denied for your DB user, run this instead:
+
+```sql
+SELECT CURRENT_USER();
+```
+
 ### Example flows
 
 - **Open app:** `GET /` → CloudFront → S3 → `index.html` + static assets.
